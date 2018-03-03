@@ -1,0 +1,10 @@
+[package]
+name = "ml-cc"
+version = "0.1.0"
+authors = ["Bruno R. de Azevedo <brunordea@gmail.com>"]
+
+[dependencies]
+serde = "1.0"
+serde_derive = "1.0"
+csv = "1.0.0-beta.5"
+tensorflow = "0.7.0"

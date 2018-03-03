@@ -1,13 +1,15 @@
-extern crate serde;
+#![feature(rustc_private)]
+
 #[macro_use]
 extern crate serde_derive;
-
+extern crate serde;
 extern crate csv;
+extern crate rand;
 extern crate tensorflow;
 
+use rand::Rng;
+
 use std::error::Error;
-use std::io;
-use std::process;
 use std::result::Result;
 use std::path::Path;
 use std::process::exit;
@@ -50,10 +52,29 @@ fn run() -> Result<(), Box<Error>> {
     println!("Found file {}!", filename);
 
     // unwrap because we know that the file exists here.
-    let mut rdr = csv::Reader::from_path(filename).unwrap();
-    for result in rdr.deserialize() {
-        let entry: CaliforniaHousing = result?;
-        println!("{:?}", entry);
+    let mut reader = csv::Reader::from_path(filename).unwrap();
+    let mut houses: Vec<CaliforniaHousing> = reader.deserialize::<CaliforniaHousing>().filter_map(
+        |e| -> Option<CaliforniaHousing> {
+            // scale the median house value to be in units of thousands,
+            // so it can be learned a little more easily with learning rates in a range that we usually use.
+            if let Ok(mut entry) = e {
+                if let Some(median_house_value) = entry.median_house_value {
+                    entry.median_house_value = Some(median_house_value / 1000f64);
+                }
+                Some(entry)
+            } else {
+                None
+            }
+        },
+    ).collect();
+
+    // Randomize the data, just to be sure not to get any pathological ordering
+    // effects that might harm the performance of Stochastic Gradient Descent
+    let mut rng = rand::thread_rng();
+    rng.shuffle(houses.as_mut_slice());
+
+    for house in houses {
+        println!("{:?}", house);
     }
 
     Ok(())

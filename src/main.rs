@@ -16,6 +16,7 @@ use std::process::exit;
 
 use tensorflow::Code;
 use tensorflow::Status;
+use tensorflow::Tensor;
 
 fn main() {
     exit(match run() {
@@ -42,7 +43,7 @@ struct CaliforniaHousing {
     median_house_value: Option<f64>,
 }
 
-fn run() -> Result<(), Box<Error>> {
+fn setup_data() -> Result<Vec<CaliforniaHousing>, Box<Error>> {
     let filename = "data/california-housing-train.csv";
     if !Path::new(filename).exists() {
         return Err(Box::new(
@@ -73,8 +74,24 @@ fn run() -> Result<(), Box<Error>> {
     let mut rng = rand::thread_rng();
     rng.shuffle(houses.as_mut_slice());
 
-    for house in houses {
-        println!("{:?}", house);
+    Ok(houses)
+}
+
+fn run() -> Result<(), Box<Error>> {
+    let data = setup_data()?;
+    let mut feature_total_rooms: Tensor<f64> = Tensor::new(&[data.len() as u64]);
+    let mut target_median_room_value: Tensor<f64> = Tensor::new(&[data.len() as u64]);
+    for (i, value) in data.into_iter().enumerate() {
+        feature_total_rooms[i] = if let Some(total_rooms) = value.total_rooms {
+            total_rooms
+        } else {
+            0f64
+        };
+        target_median_room_value[i] = if let Some(median_house_value) = value.median_house_value {
+            median_house_value
+        } else {
+            0f64
+        };
     }
 
     Ok(())

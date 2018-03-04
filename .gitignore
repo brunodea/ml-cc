@@ -1,4 +1,4 @@
-
+/data/models
 /target/
 **/*.rs.bk
 Cargo.lock

@@ -2,6 +2,7 @@
 name = "ml-cc"
 version = "0.1.0"
 authors = ["Bruno R. de Azevedo <brunordea@gmail.com>"]
+build = "build.rs"
 
 [dependencies]
 serde = "1.0"
